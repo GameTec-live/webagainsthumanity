@@ -108,16 +108,21 @@ function RoomCode({ code }: { code: string }) {
 
 export function Invite({ code }: { code: string }) {
   const [copied, setCopied] = React.useState(false)
+  const timeout = React.useRef<number>(undefined)
+  React.useEffect(() => () => window.clearTimeout(timeout.current), [])
   async function copy() {
     await navigator.clipboard.writeText(`${location.origin}/room/${code}`)
     setCopied(true)
-    window.setTimeout(() => setCopied(false), 1600)
+    window.clearTimeout(timeout.current)
+    timeout.current = window.setTimeout(() => setCopied(false), 1600)
   }
   return (
-    <Button variant="outline" className="h-9 rounded-md px-3" onClick={copy}>
-      {copied ? <Check /> : <Share2 />}
-      {copied ? "Copied" : "Invite"}
-    </Button>
+    <div className="relative">
+      <Button variant="outline" className="h-9 rounded-md px-3" onClick={copy}>
+        {copied ? <Check /> : <Share2 />}
+        {copied ? "Copied" : "Invite"}
+      </Button>
+    </div>
   )
 }
 
