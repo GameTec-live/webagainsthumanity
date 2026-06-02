@@ -66,10 +66,17 @@ export default {
         const body = (await request.json()) as CreateBody
         validateName(body.name)
         validateSettings(body.settings)
-        if (body.settings.selectedPacks.length === 0) {
-          throw new Error("Choose at least one deck.")
+        if (
+          body.settings.selectedPacks.length === 0 &&
+          body.settings.customAnswers.length === 0 &&
+          body.settings.customPrompts.length === 0
+        ) {
+          throw new Error("Choose at least one deck or import a custom pack.")
         }
-        const deck = await getCompactDeck()
+        const deck =
+          body.settings.selectedPacks.length > 0
+            ? await getCompactDeck()
+            : { white: [], black: [], packs: {} }
         const cards = selectCards(deck, body.settings)
         for (let attempt = 0; attempt < 5; attempt += 1) {
           const code = createCode()

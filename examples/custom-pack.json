@@ -1,0 +1,19 @@
+{
+  "name": "Sample Custom Pack",
+  "white": [
+    "A suspiciously specific example.",
+    "Deploying on a Friday.",
+    "An unreadable stack trace.",
+    "Three hours of debugging.",
+    "A meeting that could have been an email.",
+    "Turning it off and on again."
+  ],
+  "black": [
+    "The release was delayed by _.",
+    "_ and _: the perfect pair.",
+    {
+      "text": "Our roadmap now consists of _, _, and _.",
+      "pick": 3
+    }
+  ]
+}

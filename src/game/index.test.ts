@@ -68,6 +68,13 @@ describe("game engine", () => {
     expect(state.judgeId).toBe("p2")
   })
 
+  it("rejects an unusable deck before starting", () => {
+    const state = room({ prompts: {} })
+    expect(() => startGame(state, 0, () => 0)).toThrow(
+      "Choose decks with prompt cards."
+    )
+  })
+
   it("keeps prompt card order and hides unrevealed submissions", () => {
     const state = room()
     startGame(state, 0, () => 0)

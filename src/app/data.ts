@@ -36,8 +36,59 @@ export function lines(value: string) {
 export function prompts(value: string) {
   return lines(value).map((text) => ({
     text,
-    pick: Math.min(3, Math.max(1, (text.match(/_/g) ?? []).length)),
+    pick: promptPick(text),
   }))
+}
+
+export type CustomPack = {
+  name: string
+  white: string[]
+  black: Array<{ text: string; pick: number }>
+}
+
+export function parseCustomPack(
+  value: string,
+  fallbackName: string
+): CustomPack {
+  const pack = JSON.parse(value) as unknown
+  if (
+    !isRecord(pack) ||
+    !Array.isArray(pack.white) ||
+    !Array.isArray(pack.black)
+  ) {
+    throw new Error('Custom pack JSON must contain "white" and "black" arrays.')
+  }
+  const white = pack.white.map((card) => {
+    if (typeof card !== "string") {
+      throw new Error("Every white card must be a string.")
+    }
+    return card.trim()
+  })
+  const black = pack.black.map((card) => {
+    if (typeof card === "string") {
+      const text = card.trim()
+      return { text, pick: promptPick(text) }
+    }
+    if (!isRecord(card) || typeof card.text !== "string") {
+      throw new Error(
+        "Every black card must be a string or an object with text."
+      )
+    }
+    const text = card.text.trim()
+    const pick = card.pick === undefined ? promptPick(text) : card.pick
+    if (!Number.isInteger(pick)) {
+      throw new Error("A black card pick value must be an integer.")
+    }
+    return { text, pick: pick as number }
+  })
+  return {
+    name:
+      typeof pack.name === "string" && pack.name.trim()
+        ? pack.name.trim()
+        : fallbackName,
+    white,
+    black,
+  }
 }
 
 export function formatCard(text: string) {
@@ -50,4 +101,12 @@ export function phaseLabel(room: RoomView) {
     return room.settings.mode === "czar" ? "Czar is choosing" : "Vote now"
   if (room.phase === "finished") return "Game over"
   return "Round complete"
+}
+
+function promptPick(text: string) {
+  return Math.min(3, Math.max(1, (text.match(/_/g) ?? []).length))
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
 }

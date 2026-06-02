@@ -1,9 +1,22 @@
 import * as React from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { ChevronRight, LoaderCircle, LogIn, Play, Search } from "lucide-react"
+import {
+  ChevronRight,
+  FileUp,
+  LoaderCircle,
+  LogIn,
+  Play,
+  Search,
+  X,
+} from "lucide-react"
 
-import { DEFAULT_SETTINGS, type GameSettings, type PackSummary } from "@/game"
-import { api, message, saveToken } from "@/app/data"
+import {
+  DEFAULT_SETTINGS,
+  validateSettings,
+  type GameSettings,
+  type PackSummary,
+} from "@/game"
+import { api, message, parseCustomPack, saveToken } from "@/app/data"
 import { BackButton, ErrorText, Header, PanelMotion } from "@/app/shared"
 import { DeckRow, SettingsForm } from "@/app/settings"
 import { Badge } from "@/components/ui/badge"
@@ -87,8 +100,12 @@ function CreateRoom({ onBack }: { onBack: () => void }) {
   const [name, setName] = React.useState("")
   const [settings, setSettings] = React.useState<GameSettings>(DEFAULT_SETTINGS)
   const [deckSearch, setDeckSearch] = React.useState("")
+  const [customPackName, setCustomPackName] = React.useState<string | null>(
+    null
+  )
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const customPackInput = React.useRef<HTMLInputElement>(null)
   React.useEffect(() => {
     api<{ packs: PackSummary[] }>("/api/decks")
       .then(({ packs }) => {
@@ -113,6 +130,33 @@ function CreateRoom({ onBack }: { onBack: () => void }) {
   const basePacks = packs.filter((pack) =>
     /(?:^|\b)(?:base|main)(?:\b|$)/i.test(`${pack.id} ${pack.name}`)
   )
+  async function importCustomPack(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+    setError(null)
+    try {
+      const pack = parseCustomPack(await file.text(), file.name)
+      const next = {
+        ...settings,
+        customAnswers: pack.white,
+        customPrompts: pack.black,
+      }
+      validateSettings(next)
+      setSettings(next)
+      setCustomPackName(pack.name)
+    } catch (error) {
+      setError(`Could not import custom pack: ${message(error)}`)
+    }
+  }
+  function clearCustomPack() {
+    setSettings((current) => ({
+      ...current,
+      customAnswers: [],
+      customPrompts: [],
+    }))
+    setCustomPackName(null)
+  }
   async function createRoom() {
     setLoading(true)
     setError(null)
@@ -184,6 +228,41 @@ function CreateRoom({ onBack }: { onBack: () => void }) {
           Base game
         </Button>
       </div>
+      <input
+        ref={customPackInput}
+        className="hidden"
+        type="file"
+        accept=".json,application/json"
+        onChange={importCustomPack}
+      />
+      {customPackName ? (
+        <div className="mt-3 flex items-center gap-3 rounded-md border px-3 py-2">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-semibold">{customPackName}</p>
+            <p className="text-xs text-muted-foreground">
+              {settings.customAnswers.length} white,{" "}
+              {settings.customPrompts.length} black custom cards
+            </p>
+          </div>
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            aria-label="Remove custom pack"
+            onClick={clearCustomPack}
+          >
+            <X />
+          </Button>
+        </div>
+      ) : (
+        <Button
+          className="mt-3 w-full rounded-md"
+          size="sm"
+          variant="outline"
+          onClick={() => customPackInput.current?.click()}
+        >
+          <FileUp /> Import custom pack
+        </Button>
+      )}
       <label className="relative mt-3 block">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input

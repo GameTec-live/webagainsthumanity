@@ -208,6 +208,12 @@ export function startGame(
   if (room.players.length < 3)
     throw new Error("At least 3 players are required.")
   validateSettings(room.settings)
+  if (Object.keys(room.answers).length < room.settings.handSize * 3) {
+    throw new Error("Choose decks with more answer cards.")
+  }
+  if (Object.keys(room.prompts).length === 0) {
+    throw new Error("Choose decks with prompt cards.")
+  }
   room.status = "playing"
   room.answerDeck = shuffle(Object.keys(room.answers), random)
   room.promptDeck = shuffle(Object.keys(room.prompts), random)
