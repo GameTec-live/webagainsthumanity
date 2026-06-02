@@ -116,6 +116,7 @@ export type ClientCommand =
 export type ServerMessage =
   | { type: "snapshot"; room: RoomView }
   | { type: "error"; message: string }
+  | { type: "removed"; message: string }
 
 export const DEFAULT_SETTINGS: GameSettings = {
   selectedPacks: [],

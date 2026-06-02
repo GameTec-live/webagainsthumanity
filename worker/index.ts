@@ -27,6 +27,7 @@ const ROOM_TTL = 24 * 60 * 60 * 1000
 const RECONNECT_GRACE = 15 * 60 * 1000
 const TICKET_TTL = 30 * 1000
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+const REMOVED_MESSAGE = "You have been removed from this room."
 
 type Env = {
   ROOMS: DurableObjectNamespace<GameRoom>
@@ -201,7 +202,8 @@ export class GameRoom extends DurableObject<Env> {
   }
 
   async issueTicket(token: string) {
-    await this.session(token)
+    const room = await this.room()
+    await this.session(token, room)
     const ticket = makeId("ticket")
     await this.ctx.storage.put(`ticket:${ticket}`, {
       token,
@@ -212,7 +214,7 @@ export class GameRoom extends DurableObject<Env> {
 
   async view(token: string) {
     const room = await this.room()
-    const session = await this.session(token)
+    const session = await this.session(token, room)
     return projectRoom(room, session.playerId, session.spectator)
   }
 
@@ -230,7 +232,8 @@ export class GameRoom extends DurableObject<Env> {
       return new Response("Invalid ticket.", { status: 401 })
     }
     await this.ctx.storage.delete(`ticket:${ticket}`)
-    const session = await this.session(ticketValue.token)
+    const room = await this.room()
+    const session = await this.session(ticketValue.token, room)
     const pair = new WebSocketPair()
     const [client, server] = Object.values(pair)
     this.ctx.acceptWebSocket(server)
@@ -239,7 +242,6 @@ export class GameRoom extends DurableObject<Env> {
       token: ticketValue.token,
     } satisfies SocketAttachment)
     if (session.playerId) {
-      const room = await this.room()
       const player = room.players.find((entry) => entry.id === session.playerId)
       if (player) {
         player.connected = true
@@ -303,6 +305,9 @@ export class GameRoom extends DurableObject<Env> {
     command: ClientCommand
   ) {
     if (!actor.playerId) throw new Error("Spectators cannot change the game.")
+    if (!room.players.some((player) => player.id === actor.playerId)) {
+      throw new Error(REMOVED_MESSAGE)
+    }
     switch (command.type) {
       case "settings":
         this.requireHost(room, actor.playerId)
@@ -358,6 +363,7 @@ export class GameRoom extends DurableObject<Env> {
         room.players = room.players.filter(
           (player) => player.id !== command.playerId
         )
+        this.disconnectRemovedPlayer(command.playerId)
         return
       case "rematch":
         this.requireHost(room, actor.playerId)
@@ -415,10 +421,26 @@ export class GameRoom extends DurableObject<Env> {
     return room
   }
 
-  private async session(token: string) {
+  private async session(token: string, room?: RoomState) {
     const session = await this.ctx.storage.get<Session>(`session:${token}`)
     if (!session) throw new Error("Invalid room session.")
+    if (
+      room &&
+      session.playerId &&
+      !room.players.some((player) => player.id === session.playerId)
+    ) {
+      throw new Error(REMOVED_MESSAGE)
+    }
     return session
+  }
+
+  private disconnectRemovedPlayer(playerId: string) {
+    this.ctx.getWebSockets().forEach((ws) => {
+      const actor = ws.deserializeAttachment() as SocketAttachment
+      if (actor.playerId !== playerId) return
+      this.send(ws, { type: "removed", message: REMOVED_MESSAGE })
+      ws.close(1008, REMOVED_MESSAGE)
+    })
   }
 
   private async touchSaveBroadcast(room: RoomState) {
@@ -445,6 +467,12 @@ export class GameRoom extends DurableObject<Env> {
   private broadcast(room: RoomState) {
     this.ctx.getWebSockets().forEach((ws) => {
       const actor = ws.deserializeAttachment() as SocketAttachment
+      if (
+        actor.playerId &&
+        !room.players.some((player) => player.id === actor.playerId)
+      ) {
+        return
+      }
       this.send(ws, {
         type: "snapshot",
         room: projectRoom(room, actor.playerId, actor.spectator),

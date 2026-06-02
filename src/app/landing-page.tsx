@@ -1,12 +1,6 @@
 import * as React from "react"
 import { AnimatePresence, motion } from "motion/react"
-import {
-  ChevronRight,
-  LoaderCircle,
-  LogIn,
-  Play,
-  Search,
-} from "lucide-react"
+import { ChevronRight, LoaderCircle, LogIn, Play, Search } from "lucide-react"
 
 import { DEFAULT_SETTINGS, type GameSettings, type PackSummary } from "@/game"
 import { api, message, saveToken } from "@/app/data"
@@ -241,13 +235,15 @@ function CreateRoom({ onBack }: { onBack: () => void }) {
 export function JoinRoom({
   onBack,
   initialCode = "",
+  initialError = null,
 }: {
   onBack?: () => void
   initialCode?: string
+  initialError?: string | null
 }) {
   const [code, setCode] = React.useState(initialCode)
   const [name, setName] = React.useState("")
-  const [error, setError] = React.useState<string | null>(null)
+  const [error, setError] = React.useState<string | null>(initialError)
   const [loading, setLoading] = React.useState(false)
   async function join() {
     setLoading(true)

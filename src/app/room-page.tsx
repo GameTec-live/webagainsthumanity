@@ -1,21 +1,26 @@
 import * as React from "react"
 
 import type { ClientCommand, ServerMessage } from "@/game"
-import { api, message, readToken } from "@/app/data"
+import { api, message, readToken, removeToken } from "@/app/data"
 import { GameTable } from "@/app/game-table"
 import { JoinRoom } from "@/app/landing-page"
 import { Lobby } from "@/app/lobby"
 import { ErrorToast, Header, LoadingTable, RoomBar } from "@/app/shared"
 import { useGame } from "@/app/store"
 
+const REMOVED_MESSAGE = "You have been removed from this room."
+
 export function RoomPage({ code }: { code: string }) {
   const token = readToken(code)
+  const removalMessage = new URLSearchParams(location.search).has("removed")
+    ? "You have been removed from this room. You can join again with a new name."
+    : undefined
   return (
     <main className="mx-auto w-full max-w-screen-2xl flex-1 px-4 py-4 sm:px-6">
       <Header />
       {!token ? (
         <div className="mx-auto mt-16 max-w-md rounded-2xl border p-5 shadow-xl">
-          <JoinRoom initialCode={code} />
+          <JoinRoom initialCode={code} initialError={removalMessage} />
         </div>
       ) : (
         <ConnectedRoom code={code} token={token} />
@@ -31,6 +36,10 @@ function ConnectedRoom({ code, token }: { code: string; token: string }) {
   React.useEffect(() => {
     let disposed = false
     let retry: number | undefined
+    function handleRemoval() {
+      removeToken(code)
+      location.assign(`/room/${code}?removed=1`)
+    }
     async function connect() {
       setConnection("connecting")
       try {
@@ -51,7 +60,12 @@ function ConnectedRoom({ code, token }: { code: string; token: string }) {
         ws.onmessage = (event) => {
           const payload = JSON.parse(event.data) as ServerMessage
           if (payload.type === "snapshot") setRoom(payload.room)
-          else setError(payload.message)
+          else if (
+            payload.type === "removed" ||
+            payload.message === REMOVED_MESSAGE
+          ) {
+            handleRemoval()
+          } else setError(payload.message)
         }
         ws.onclose = () => {
           if (!disposed) {
@@ -60,7 +74,12 @@ function ConnectedRoom({ code, token }: { code: string; token: string }) {
           }
         }
       } catch (error) {
-        setError(message(error))
+        const errorMessage = message(error)
+        if (errorMessage === REMOVED_MESSAGE) {
+          handleRemoval()
+          return
+        }
+        setError(errorMessage)
         setConnection("offline")
         retry = window.setTimeout(connect, 2500)
       }
