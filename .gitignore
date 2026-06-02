@@ -15,8 +15,8 @@ dist-ssr
 # env files (can opt-in for committing if needed)
 .env*
 
-# turbo
-.turbo
+.wrangler
+.dev.vars*
 
 # Editor directories and files
 .vscode/*

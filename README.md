@@ -1,21 +1,28 @@
-# shadcn/ui monorepo template
+# Web Against Humanity
 
-This is a Vite monorepo template with shadcn/ui.
+A private browser-based party card game built with React, Vite, Tailwind CSS,
+and Cloudflare Durable Objects.
 
-## Adding components
-
-To add components to your app, run the following command at the root of your `web` app:
+## Development
 
 ```bash
-pnpm dlx shadcn@latest add button -c apps/web
+bun install
+bun run dev
 ```
 
-This will place the ui components in the `packages/ui/src/components` directory.
+The Cloudflare Vite plugin starts the SPA and local Worker runtime together.
 
-## Using components
+## Commands
 
-To use the components in your app, import them from the `ui` package.
+```bash
+bun run test
+bun run lint
+bun run typecheck
+bun run build
+```
 
-```tsx
-import { Button } from "@workspace/ui/components/button";
+## Adding shadcn/ui components
+
+```bash
+bunx shadcn@latest add dialog
 ```
