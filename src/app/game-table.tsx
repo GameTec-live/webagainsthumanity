@@ -127,9 +127,9 @@ function SubmissionStatus({
   room: RoomView
   isJudge: boolean
 }) {
-  const complete = room.players.filter(
-    (player) => player.id !== room.judgeId
-  ).length
+  const { submitted, total, pendingPlayerName } = room.submissionProgress
+  const isWaitingOnLastPlayer =
+    total > 1 && submitted === total - 1 && pendingPlayerName !== null
   return (
     <div className="flex min-h-64 flex-col items-center justify-center rounded-xl border border-dashed p-6 text-center">
       <LoaderCircle className="size-6 animate-spin text-muted-foreground" />
@@ -141,8 +141,13 @@ function SubmissionStatus({
             : "Cards are hitting the table."}
       </h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        {room.submissions.length} of {complete} submissions are in.
+        {submitted} of {total} submissions are in.
       </p>
+      {isWaitingOnLastPlayer && (
+        <p className="mt-1 text-sm font-semibold text-muted-foreground">
+          {pendingPlayerName} is holding up everyone.
+        </p>
+      )}
     </div>
   )
 }

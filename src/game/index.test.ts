@@ -85,6 +85,11 @@ describe("game engine", () => {
     const view = projectRoom(state, player.id)
     expect(state.submissions[0].cards).toEqual(cards)
     expect(view.submissions).toEqual([])
+    expect(view.submissionProgress).toEqual({
+      submitted: 1,
+      total: 2,
+      pendingPlayerName: "p3",
+    })
     expect(view.hasSubmitted).toBe(true)
     expect(view).not.toHaveProperty("answers")
     expect(view).not.toHaveProperty("answerDeck")

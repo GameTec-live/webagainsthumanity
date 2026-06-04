@@ -97,6 +97,11 @@ export type RoomView = Omit<
     votes: number | null
     playerId: string | null
   }>
+  submissionProgress: {
+    submitted: number
+    total: number
+    pendingPlayerName: string | null
+  }
   hasVoted: boolean
   hasSubmitted: boolean
   spectator: boolean
@@ -429,6 +434,15 @@ export function projectRoom(
     room.phase === "judging" ||
     room.phase === "result" ||
     room.phase === "finished"
+  const submittedPlayerIds = new Set(
+    room.submissions.map((submission) => submission.playerId)
+  )
+  const submitters = room.players.filter(
+    (player) => player.connected && player.id !== room.judgeId
+  )
+  const pendingSubmitters = submitters.filter(
+    (player) => !submittedPlayerIds.has(player.id)
+  )
   return {
     version: room.version,
     code: room.code,
@@ -462,6 +476,14 @@ export function projectRoom(
               : null,
         }))
       : [],
+    submissionProgress: {
+      submitted: submitters.filter((player) =>
+        submittedPlayerIds.has(player.id)
+      ).length,
+      total: submitters.length,
+      pendingPlayerName:
+        pendingSubmitters.length === 1 ? pendingSubmitters[0].name : null,
+    },
     hasVoted: viewerId !== null && Boolean(room.votes[viewerId]),
     hasSubmitted:
       viewerId !== null &&
