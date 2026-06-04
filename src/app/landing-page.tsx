@@ -44,7 +44,7 @@ export function LandingPage() {
           </section>
           <motion.section
             layout
-            className="rounded-2xl border border-border bg-background/90 p-5 shadow-2xl shadow-black/10 backdrop-blur lg:col-span-2 lg:max-h-full lg:overflow-hidden"
+            className="min-w-0 overflow-hidden rounded-2xl border border-border bg-background/90 p-5 shadow-2xl shadow-black/10 backdrop-blur lg:col-span-2 lg:max-h-full"
           >
             <AnimatePresence mode="wait">
               {view === "start" && <StartCard key="start" setView={setView} />}
@@ -173,7 +173,7 @@ function CreateRoom({ onBack }: { onBack: () => void }) {
     }
   }
   return (
-    <PanelMotion className="lg:flex lg:max-h-full lg:flex-col">
+    <PanelMotion className="min-w-0 lg:flex lg:max-h-full lg:flex-col">
       <BackButton onClick={onBack} />
       <h2 className="mt-4 text-2xl font-black">Set the table.</h2>
       <p className="mt-1 text-sm text-muted-foreground">
@@ -191,7 +191,7 @@ function CreateRoom({ onBack }: { onBack: () => void }) {
       />
       <SettingsForm settings={settings} onChange={setSettings} compact />
       <Separator className="my-5" />
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs font-bold tracking-wider uppercase">
           Decks
         </span>
@@ -236,7 +236,7 @@ function CreateRoom({ onBack }: { onBack: () => void }) {
         onChange={importCustomPack}
       />
       {customPackName ? (
-        <div className="mt-3 flex items-center gap-3 rounded-md border px-3 py-2">
+        <div className="mt-3 flex min-w-0 items-center gap-3 rounded-md border px-3 py-2">
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-semibold">{customPackName}</p>
             <p className="text-xs text-muted-foreground">
@@ -272,7 +272,7 @@ function CreateRoom({ onBack }: { onBack: () => void }) {
           onChange={(event) => setDeckSearch(event.target.value)}
         />
       </label>
-      <div className="mt-2 max-h-56 space-y-1 overflow-y-auto pr-1 lg:min-h-0 lg:flex-1">
+      <div className="mt-2 max-h-56 min-w-0 space-y-1 overflow-y-auto pr-1 lg:min-h-0 lg:flex-1">
         {loading && packs.length === 0 ? (
           <LoaderCircle className="mx-auto my-8 size-5 animate-spin text-muted-foreground" />
         ) : (

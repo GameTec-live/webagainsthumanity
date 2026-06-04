@@ -20,7 +20,7 @@ export function SettingsForm({
     onChange({ ...settings, [key]: value })
   return (
     <div className="mt-4 space-y-3">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Select
           label="Game ends"
           value={settings.endCondition}
@@ -42,7 +42,7 @@ export function SettingsForm({
       </div>
       {!compact && (
         <>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Select
               label="Winner selection"
               value={settings.mode}
@@ -58,14 +58,14 @@ export function SettingsForm({
               onChange={(value) => set("handSize", value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field
               label="Player cap"
               value={settings.playerCap}
               onChange={(value) => set("playerCap", value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field
               label="Pick timer seconds"
               value={settings.submitTimerSeconds ?? 0}
@@ -156,12 +156,17 @@ export function DeckRow({
   onChange: () => void
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 hover:bg-muted">
-      <input type="checkbox" checked={checked} onChange={onChange} />
+    <label className="flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-2 py-2 hover:bg-muted sm:gap-3">
+      <input
+        className="shrink-0"
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+      />
       <span className="min-w-0 flex-1 truncate text-xs font-semibold">
         {pack.name}
       </span>
-      <span className="text-xs text-muted-foreground">
+      <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
         {pack.whiteCount + pack.blackCount} cards
       </span>
       {pack.official && <Badge>Official</Badge>}
