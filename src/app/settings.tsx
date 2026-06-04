@@ -1,10 +1,11 @@
+import * as React from "react"
 import { Check } from "lucide-react"
 
 import type { GameSettings, PackSummary } from "@/game"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea as CustomTextarea } from "@/components/ui/textarea"
 import { lines, prompts } from "@/app/data"
 
 export function SettingsForm({
@@ -94,9 +95,7 @@ export function SettingsForm({
           </label>
           <Textarea
             value={settings.customAnswers.join("\n")}
-            onChange={(event) =>
-              set("customAnswers", lines(event.target.value))
-            }
+            onValueChange={(value) => set("customAnswers", lines(value))}
           />
           <label className="block text-xs font-bold tracking-wider uppercase">
             Custom prompts{" "}
@@ -108,13 +107,44 @@ export function SettingsForm({
             value={settings.customPrompts
               .map((prompt) => prompt.text)
               .join("\n")}
-            onChange={(event) =>
-              set("customPrompts", prompts(event.target.value))
-            }
+            onValueChange={(value) => set("customPrompts", prompts(value))}
           />
         </>
       )}
     </div>
+  )
+}
+
+function Textarea({
+  value,
+  onValueChange,
+}: {
+  value: string
+  onValueChange: (value: string) => void
+}) {
+  const [draft, setDraft] = React.useState(value)
+  const focused = React.useRef(false)
+
+  React.useEffect(() => {
+    if (!focused.current) setDraft(value)
+  }, [value])
+
+  return (
+    <CustomTextarea
+      value={draft}
+      onFocus={() => {
+        focused.current = true
+      }}
+      onBlur={() => {
+        focused.current = false
+        setDraft(value)
+      }}
+      onChange={(event) => {
+        const next = event.target.value
+        setDraft(next)
+        onValueChange(next)
+      }}
+    />
   )
 }
 

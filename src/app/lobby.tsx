@@ -6,7 +6,6 @@ import type { RoomView } from "@/game"
 import type { SendCommand } from "@/app/types"
 import { removeToken } from "@/app/data"
 import { RulesSummary, SettingsForm } from "@/app/settings"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 export function Lobby({ room, send }: { room: RoomView; send: SendCommand }) {
@@ -26,7 +25,6 @@ export function Lobby({ room, send }: { room: RoomView; send: SendCommand }) {
     <div className="grid gap-5 py-6 lg:grid-cols-3">
       <section className="rounded-2xl border p-5 sm:p-7 lg:col-span-2">
         <div>
-          <Badge>Lobby</Badge>
           <h1 className="mt-3 text-4xl font-black tracking-tight">
             Waiting for the crew.
           </h1>
